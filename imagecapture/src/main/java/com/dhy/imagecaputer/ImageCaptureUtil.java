@@ -85,7 +85,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (intent.resolveActivity(context.getPackageManager()) != null) {
             ImageHolder holder = getImageHolder(imageView.getId());
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, holder.getTempImageFile(context));
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(holder.getTempImageFile(context)));
             startActivityForResult(intent, REQUEST_TAKE_PHOTO);
         } else {
             Toast.makeText(context, "没有找到相关应用，请直接选择图片", Toast.LENGTH_LONG).show();
@@ -113,10 +113,9 @@ public class ImageCaptureUtil extends ImageCaptureData {
     public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_TAKE_PHOTO || requestCode == REQUEST_PICK_IMAGE) {
             if (resultCode == Activity.RESULT_OK) {
-                getLastImageHolder().saveTempImageFile();
                 onActivityResult(requestCode == REQUEST_TAKE_PHOTO, data);
                 return true;
-            } else if (requestCode == REQUEST_TAKE_PHOTO) {//canceled
+            } else if (requestCode == REQUEST_TAKE_PHOTO) {//cancel take photo
                 getLastImageHolder().deleteTempImageFile();
                 return true;
             }
@@ -125,14 +124,12 @@ public class ImageCaptureUtil extends ImageCaptureData {
     }
 
     private void onActivityResult(boolean takePhoto, Intent data) {
-        int id = getLastImageViewId();
         if (takePhoto) {
-            if (data != null) {//no sd card mode, not support yet
-                Toast.makeText(context, "no sd card mode, not support yet", Toast.LENGTH_LONG).show();
-            } else {//get file uri from buffer with imageView id
-                ImageHolder status = getImageHolder(id);
-                onGetImageUri(Uri.fromFile(status.getTempImageFile(context)));
-            }
+            ImageHolder status = getLastImageHolder();
+            File file = status.getTempImageFile(context);
+            Uri uri = Uri.fromFile(file);
+            status.saveTempImageFile();
+            onGetImageUri(uri);
         } else {//pick image
             onGetImageUri(data.getData());
         }

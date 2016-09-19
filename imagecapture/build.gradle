@@ -27,8 +27,8 @@ ext {
 
     libraryDescription = 'A util to pick image or take photo for android'
 
-    siteUrl = 'https://github.com/DonaldDu/XIntent'
-    gitUrl = 'https://github.com/DonaldDu/XIntent.git'
+    siteUrl = 'https://git.oschina.net/welldone2009/ImageCapture'
+    gitUrl = 'https://git.oschina.net/welldone2009/ImageCapture.git'
 
     libraryVersion = android.defaultConfig.versionName
 

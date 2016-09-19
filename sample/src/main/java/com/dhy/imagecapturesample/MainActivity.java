@@ -8,6 +8,7 @@ import android.widget.ImageView;
 
 import com.dhy.imagecaputer.ImageCaptureUtil;
 import com.dhy.imagecaputer.ImageUploader;
+import com.facebook.drawee.backends.pipeline.Fresco;
 
 import java.io.File;
 import java.util.List;
@@ -20,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fresco.initialize(this);
         setContentView(R.layout.activity_main);
         imageView = (ImageView) findViewById(R.id.imageView);
         imageCaptureUtil = new ImageCaptureUtil(this);
@@ -68,5 +70,9 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    public void choose(View view) {
+        imageCaptureUtil.showChooseDialog(view);
     }
 }

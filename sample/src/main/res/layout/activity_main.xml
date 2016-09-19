@@ -10,11 +10,12 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.dhy.imagecapturesample.MainActivity">
 
-    <ImageView
+    <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/imageView"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:background="#878897" />
+        android:background="#878897"
+        android:onClick="choose" />
 
     <Button
         android:layout_width="wrap_content"
