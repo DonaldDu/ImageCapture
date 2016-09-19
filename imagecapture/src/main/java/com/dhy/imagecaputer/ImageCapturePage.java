@@ -40,6 +40,9 @@ abstract class ImageCapturePage {
         }
     }
 
+    /**
+     * @return get image or not
+     */
     public abstract boolean onActivityResult(int requestCode, int resultCode, Intent data);
 
     public abstract void onSaveInstanceState(Bundle outState);

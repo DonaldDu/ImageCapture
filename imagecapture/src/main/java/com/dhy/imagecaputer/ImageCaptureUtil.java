@@ -109,6 +109,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
     /**
      * @return get image or not
      */
+    @Override
     public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_TAKE_PHOTO || requestCode == REQUEST_PICK_IMAGE) {
             if (resultCode == Activity.RESULT_OK) {
@@ -155,7 +156,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
         for (ImageHolder h : holders.values()) {
             if (h.needPrepared()) {
                 File file = ImageHolder.getJpgImageFile(context);
-                ImageCompressUtil.compressJpegImage(context, h.getRawImageUri(), file.getAbsolutePath(), setting.maxWidth, setting.maxHeight, setting.maxSizeInBytes);
+                ImageCompressUtil.compressJpegImage(context, h.getRawImageUri(), file.getAbsolutePath(), (int) setting.maxWidth, (int) setting.maxHeight, setting.maxSizeInBytes);
                 h.setFileToUpload(file);
             }
         }

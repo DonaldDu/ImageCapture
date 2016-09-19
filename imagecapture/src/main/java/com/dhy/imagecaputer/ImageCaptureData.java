@@ -28,19 +28,6 @@ abstract class ImageCaptureData extends ImageCapturePage {
         return count;
     }
 
-    protected boolean hasImage(View... imageViews) {
-        for (View imageView : imageViews) {
-            if (!getImageHolder(imageView.getId()).hasImage()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    protected boolean hasImage(int viewId) {
-        return getImageHolder(viewId).hasImage();
-    }
-
     @NonNull
     protected ImageHolder getImageHolder(int viewId) {
         ImageHolder status = buffer.get(viewId);
