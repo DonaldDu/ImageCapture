@@ -13,5 +13,5 @@ public abstract class ImageUploader {
         util.uploadImage(this);
     }
 
-    public abstract void onFinishAll(List<String> urls);
+    public abstract void onFinishAll(List<ImageHolder> urls);
 }

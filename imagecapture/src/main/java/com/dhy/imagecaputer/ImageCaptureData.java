@@ -32,7 +32,7 @@ abstract class ImageCaptureData extends ImageCapturePage {
     protected ImageHolder getImageHolder(int viewId) {
         ImageHolder status = buffer.get(viewId);
         if (status == null) {
-            status = new ImageHolder();
+            status = new ImageHolder(viewId);
             buffer.put(viewId, status);
         }
         return status;
@@ -77,7 +77,7 @@ abstract class ImageCaptureData extends ImageCapturePage {
     protected void updateView(ImageView imageView, ImageHolder holder) {
         if (holder.hasImage()) {
             if (imageView.getVisibility() != View.VISIBLE) imageView.setVisibility(View.VISIBLE);
-            imageSetter.setImage(imageView, holder.getRawImageUri());
+            imageSetter.setImage(imageView, holder.getRawImage());
         }
     }
 

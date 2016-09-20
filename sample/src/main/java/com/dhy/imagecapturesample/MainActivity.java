@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.dhy.imagecaputer.ImageCaptureUtil;
+import com.dhy.imagecaputer.ImageHolder;
 import com.dhy.imagecaputer.ImageUploader;
 import com.facebook.drawee.backends.pipeline.Fresco;
 
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFinishAll(List<String> urls) {
+            public void onFinishAll(List<ImageHolder> urls) {
 
             }
         });

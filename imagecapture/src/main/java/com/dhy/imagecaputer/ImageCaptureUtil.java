@@ -41,17 +41,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
 
     public <T extends View.OnCreateContextMenuListener> ImageCaptureUtil(T activityOrFragment, @NonNull ImageSetter imageSetter) {
         super(activityOrFragment, imageSetter);
-        initSettingByDefault();
-    }
-
-    private void initSettingByDefault() {
-        CaptureSetting setting = new CaptureSetting();
-        setting.maxWidth = 600;
-        setting.maxHeight = 800;
-        setting.maxSizeInBytes = 1024 * 1024;
-        setting.REQUEST_TAKE_PHOTO = 101;
-        setting.REQUEST_PICK_IMAGE = 102;
-        initSetting(setting);
+        initSetting(new CaptureSetting());
     }
 
     public void initSetting(@NonNull CaptureSetting setting) {
@@ -138,7 +128,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
     private void onGetImageUri(Uri uri) {
         try {
             ImageHolder holder = getLastImageHolder();
-            holder.setRawImageUri(uri);
+            holder.onGetNewRawImage(uri);
             ImageView view = (ImageView) findViewById(getLastImageViewId());
             updateView(view, holder);
         } catch (Exception e) {
@@ -153,8 +143,11 @@ public class ImageCaptureUtil extends ImageCaptureData {
         for (ImageHolder h : holders.values()) {
             if (h.needPrepared()) {
                 File file = ImageHolder.getJpgImageFile(context);
-                ImageCompressUtil.compressJpegImage(context, h.getRawImageUri(), file.getAbsolutePath(), (int) setting.maxWidth, (int) setting.maxHeight, setting.maxSizeInBytes);
-                h.setFileToUpload(file);
+                ImageCompressUtil.compressJpegImage(context, h.getRawImage(), file,
+                        (int) setting.maxWidth,
+                        (int) setting.maxHeight,
+                        setting.maxSizeInBytes);
+                h.setUploadFile(file);
             }
         }
     }
@@ -167,13 +160,11 @@ public class ImageCaptureUtil extends ImageCaptureData {
      * @return null when no more to upload
      */
     @Nullable
-    private Task getNextUploadTask() {
+    private ImageHolder getNextUploadTask() {
         for (Integer id : getImageHolders().keySet()) {
             ImageHolder h = getImageHolder(id);
             if (!h.isUploaded() && h.isReadyToUpload()) {
-                Task task = new Task();
-                task.holder = h;
-                return task;
+                return h;
             }
         }
         return null;
@@ -198,25 +189,20 @@ public class ImageCaptureUtil extends ImageCaptureData {
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                Task task = getNextUploadTask();
+                ImageHolder task = getNextUploadTask();
                 if (task != null) {
-                    imageUploader.upload(ImageCaptureUtil.this, task.viewId, task.holder.getFileToUpload());
-                } else imageUploader.onFinishAll(getAllUploadImageUrls());
+                    imageUploader.upload(ImageCaptureUtil.this, task.getViewId(), task.getUploadFile());
+                } else imageUploader.onFinishAll(getAllUploadImageResults());
             }
         }.execute();
     }
 
-    public List<String> getAllUploadImageUrls() {
-        List<String> urls = new ArrayList<>();
+    public List<ImageHolder> getAllUploadImageResults() {
+        List<ImageHolder> list = new ArrayList<>();
         for (ImageHolder h : getImageHolders().values()) {
-            if (h.isUploaded()) urls.add(h.getUploadedImageUrl());
+            if (h.isUploaded()) list.add(h);
         }
-        return urls;
-    }
-
-    private class Task {
-        int viewId;
-        ImageHolder holder;
+        return list;
     }
     //endregion
 }

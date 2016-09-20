@@ -3,93 +3,102 @@ package com.dhy.imagecaputer;
 import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.File;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-class ImageHolder implements Serializable {
-    private File fileToUpload, temp;
+public class ImageHolder implements Serializable {
+    private File uploadFile, temp;
     private String rawImageUri;
     private String uploadedImageUrl;
+    private int viewId;
 
-    public ImageHolder() {
+    public ImageHolder(int viewId) {
+        this.viewId = viewId;
     }
 
     public String getUploadedImageUrl() {
         return uploadedImageUrl;
     }
 
-    public void setUploadedImageUrl(String uploadedImageUrl) {
+    void setUploadedImageUrl(String uploadedImageUrl) {
         this.uploadedImageUrl = uploadedImageUrl;
     }
 
-    public boolean isUploaded() {
+    boolean isUploaded() {
         return !TextUtils.isEmpty(uploadedImageUrl);
     }
 
-    public boolean hasImage() {
+    boolean hasImage() {
         return rawImageUri != null;
     }
 
-    public File getTempImageFile(Context context) {
+    File getTempImageFile(Context context) {
         if (temp == null) temp = getJpgImageFile(context);
         return temp;
     }
 
-    public void deleteTempImageFile() {
+    void deleteTempImageFile() {
         delete(temp);
         temp = null;
     }
 
-    public void saveTempImageFile() {
+    void saveTempImageFile() {
         temp = null;
     }
 
-    public static File getJpgImageFile(Context context) {
+    static File getJpgImageFile(Context context) {
         File dir = context.getExternalCacheDir();
         if (dir == null) dir = context.getCacheDir();
-        Log.i("getJpgImageFile", "CacheDir " + dir.getAbsolutePath());
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String fileName = context.getClass().getName() + timeStamp + ".jpg";
         return new File(dir, fileName);
     }
 
-    public void reset() {
-        delete(fileToUpload);
-        fileToUpload = null;
-
-        deleteTempImageFile();
-        rawImageUri = null;
-    }
-
-    public boolean needPrepared() {
+    boolean needPrepared() {
         return hasImage() && !isReadyToUpload() && !isUploaded();
     }
 
-    public boolean isReadyToUpload() {
-        return fileToUpload != null;
+    boolean isReadyToUpload() {
+        return uploadFile != null;
     }
 
     private void delete(File file) {
         if (file != null && file.exists()) file.delete();
     }
 
-    public Uri getRawImageUri() {
-        return Uri.parse(rawImageUri);
+    Uri getRawImage() {
+        return rawImageUri != null ? Uri.parse(rawImageUri) : null;
     }
 
-    public void setRawImageUri(Uri rawImageUri) {
+    void onGetNewRawImage(Uri rawImageUri) {
+        if (!rawImageUri.equals(getRawImage())) {
+            reset();
+        }
         this.rawImageUri = rawImageUri.toString();
     }
 
-    public void setFileToUpload(File fileToUpload) {
-        this.fileToUpload = fileToUpload;
+    private void reset() {
+        delete(uploadFile);
+        delete(temp);
+
+        uploadFile = null;
+        temp = null;
+        rawImageUri = null;
+        uploadedImageUrl = null;
     }
 
-    public File getFileToUpload() {
-        return fileToUpload;
+    void setUploadFile(File uploadFile) {
+        this.uploadFile = uploadFile;
+    }
+
+    public File getUploadFile() {
+        return uploadFile;
+    }
+
+    public int getViewId() {
+        return viewId;
     }
 }

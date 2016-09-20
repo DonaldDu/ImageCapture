@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
@@ -14,21 +15,20 @@ public class ImageCompressUtil {
     /**
      * compressJpegImage(path, 480, 800, 1024 * 1024);//1M
      */
-    public static boolean compressJpegImage(Context context, Uri rawImageUri, String toStorePath) throws FileNotFoundException {
-        return compressJpegImage(context, rawImageUri, toStorePath, 480, 800, 1024 * 1024);//1M
+    public static boolean compressJpegImage(Context context, Uri rawImageUri, File fileToStore) throws FileNotFoundException {
+        return compressJpegImage(context, rawImageUri, fileToStore, 480, 800, 1024 * 1024);//1M
     }
 
     /**
      * @param maxSize in bytes
      * @return success or not
      */
-    public static boolean compressJpegImage(Context context, Uri rawImageUri, String toStorePath, int maxW, int maxH, long maxSize) throws FileNotFoundException {
+    public static boolean compressJpegImage(Context context, Uri rawImageUri, File fileToStore, int maxW, int maxH, long maxSize) throws FileNotFoundException {
         BitmapFactory.Options options = getCompressImageOptions(context, rawImageUri, maxW, maxH);
         Bitmap bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(rawImageUri), null, options);
         int quality = getCompressJpegImageQuality(bitmap, maxSize);
-        System.out.println("quality1 " + quality);
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(toStorePath);
+            FileOutputStream fileOutputStream = new FileOutputStream(fileToStore);
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, fileOutputStream);
             bitmap.recycle();
         } catch (FileNotFoundException e) {
@@ -43,11 +43,9 @@ public class ImageCompressUtil {
      * @param maxSize in bytes
      */
     private static int getCompressJpegImageQuality(Bitmap image, long maxSize) {
-        System.out.println("quality2 " + image.getByteCount() + ":" + maxSize);
         if (image.getByteCount() > maxSize) {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             int quality = (int) (100 * maxSize / image.getByteCount());
-            System.out.println("quality3 " + quality);
             image.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
             while (outputStream.toByteArray().length > maxSize) {
                 outputStream.reset();
@@ -66,7 +64,6 @@ public class ImageCompressUtil {
         BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
         options.inJustDecodeBounds = false;
         options.inSampleSize = computeSampleSize(options, maxW, maxH);
-        System.out.println("quality4 " + options.inSampleSize);
         return options;
     }
 
