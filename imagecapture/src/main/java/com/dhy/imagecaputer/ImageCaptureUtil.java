@@ -6,6 +6,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -18,6 +20,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +55,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
 
     public void showChooseDialog(final View imageView) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage("You may Override this to show custom dialog");
+        builder.setMessage("You may override this to show custom dialog");
         builder.setNegativeButton("PickImage", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -117,9 +120,9 @@ public class ImageCaptureUtil extends ImageCaptureData {
         if (takePhoto) {
             ImageHolder status = getLastImageHolder();
             File file = status.getTempImageFile(context);
-            Uri uri = Uri.fromFile(file);
+            checkImageRotate(file);
             status.saveTempImageFile();
-            onGetImageUri(uri);
+            onGetImageUri(Uri.fromFile(file));
         } else {//pick image
             onGetImageUri(data.getData());
         }
@@ -136,6 +139,23 @@ public class ImageCaptureUtil extends ImageCaptureData {
         }
     }
 
+    void checkImageRotate(File photo) {
+        try {
+            int digree = ImageRotateUtil.getRotateDigree(photo);
+            if (digree > 0) {
+                ImageCompressUtil.compressJpegImage(context, Uri.fromFile(photo), photo,
+                        (int) setting.maxWidth,
+                        (int) setting.maxHeight,
+                        setting.maxSizeInBytes);
+                Bitmap bitmap = BitmapFactory.decodeFile(photo.getAbsolutePath());
+                bitmap = ImageRotateUtil.rotate(bitmap, digree);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(photo));
+                bitmap.recycle();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     //region for upload image
 
     private void prepareUploadFile() throws FileNotFoundException {
@@ -152,7 +172,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
         }
     }
 
-    void setUploadedUrl(int viewId, String imageUrl) {
+    public void setUploadedUrl(int viewId, String imageUrl) {
         getImageHolder(viewId).setUploadedImageUrl(imageUrl);
     }
 

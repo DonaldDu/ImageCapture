@@ -2,6 +2,7 @@ package com.dhy.imagecaputer;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -15,7 +16,7 @@ abstract class ImageCaptureData extends ImageCapturePage {
     private Map<Integer, ImageHolder> buffer = new HashMap<>();
     private static final String KEY_BUFFER = ImageCaptureData.class.getName();
 
-    public <T extends View.OnCreateContextMenuListener> ImageCaptureData(T activityOrFragment, @NonNull ImageSetter imageSetter) {
+    public <T extends View.OnCreateContextMenuListener> ImageCaptureData(T activityOrFragment, @Nullable ImageSetter imageSetter) {
         super(activityOrFragment);
         this.imageSetter = imageSetter;
     }
@@ -29,7 +30,12 @@ abstract class ImageCaptureData extends ImageCapturePage {
     }
 
     @NonNull
-    protected ImageHolder getImageHolder(int viewId) {
+    public ImageHolder getImageHolder(View view) {
+        return getImageHolder(view.getId());
+    }
+
+    @NonNull
+    public ImageHolder getImageHolder(int viewId) {
         ImageHolder status = buffer.get(viewId);
         if (status == null) {
             status = new ImageHolder(viewId);
@@ -75,13 +81,13 @@ abstract class ImageCaptureData extends ImageCapturePage {
     }
 
     protected void updateView(ImageView imageView, ImageHolder holder) {
-        if (holder.hasImage()) {
+        if (imageSetter != null && holder.hasImage()) {
             if (imageView.getVisibility() != View.VISIBLE) imageView.setVisibility(View.VISIBLE);
             imageSetter.setImage(imageView, holder.getRawImage());
         }
     }
 
-    private void updateView() {
+    public void updateView() {
         for (Integer id : buffer.keySet()) {
             updateView((ImageView) findViewById(id), buffer.get(id));
         }

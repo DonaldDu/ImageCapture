@@ -70,7 +70,12 @@ public class ImageHolder implements Serializable {
     }
 
     Uri getRawImage() {
-        return rawImageUri != null ? Uri.parse(rawImageUri) : null;
+        if (rawImageUri != null) {
+            return Uri.parse(rawImageUri);
+        } else if (uploadedImageUrl != null) {
+            return Uri.parse(uploadedImageUrl);
+        }
+        return null;
     }
 
     void onGetNewRawImage(Uri rawImageUri) {
@@ -80,7 +85,7 @@ public class ImageHolder implements Serializable {
         this.rawImageUri = rawImageUri.toString();
     }
 
-    private void reset() {
+    public void reset() {
         delete(uploadFile);
         delete(temp);
 
