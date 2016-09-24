@@ -4,6 +4,7 @@ package com.dhy.imagecaputer;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -76,12 +77,12 @@ public class ImageCaptureUtil extends ImageCaptureData {
     public void takePhoto(View imageView) {
         setLastImageViewId(imageView.getId());
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (intent.resolveActivity(context.getPackageManager()) != null) {
-            ImageHolder holder = getImageHolder(imageView.getId());
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(holder.getTempImageFile(context)));
+        ImageHolder holder = getImageHolder(imageView.getId());
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(holder.getTempImageFile(context)));
+        try {
             startActivityForResult(intent, REQUEST_TAKE_PHOTO);
-        } else {
-            Toast.makeText(context, "没有找到相关应用，请直接选择图片", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            onStartCaptureImageError(true, e);
         }
     }
 
@@ -91,12 +92,22 @@ public class ImageCaptureUtil extends ImageCaptureData {
         Intent intent = new Intent(Build.VERSION.SDK_INT >= 19 ? Intent.ACTION_OPEN_DOCUMENT : Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
-        if (intent.resolveActivity(context.getPackageManager()) != null) {
-            getImageHolder(imageView.getId());
+        try {
             startActivityForResult(intent, REQUEST_PICK_IMAGE);
-        } else {
-            Toast.makeText(context, "没有找到相关应用，请使用相机拍照", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            onStartCaptureImageError(false, e);
         }
+    }
+
+    protected void onStartCaptureImageError(boolean takePhoto, Exception e) {
+        e.printStackTrace();
+        String msg;
+        if (e instanceof SecurityException) {
+            msg = takePhoto ? "请开启拍照权限" : "请开启读取文件权限";
+        } else if (e instanceof ActivityNotFoundException) {
+            msg = takePhoto ? "没有找到拍照相关应用" : "没有找到选择图片相关应用";
+        } else msg = takePhoto ? "未知错误，相机拍照失败" : "未知错误，选择图片失败";
+        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -110,7 +121,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
                 return true;
             } else if (requestCode == REQUEST_TAKE_PHOTO) {//cancel take photo
                 getLastImageHolder().deleteTempImageFile();
-                return true;
+                return false;
             }
         }
         return false;
