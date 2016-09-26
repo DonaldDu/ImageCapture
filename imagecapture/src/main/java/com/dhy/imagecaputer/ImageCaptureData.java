@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,8 +50,8 @@ abstract class ImageCaptureData extends ImageCapturePage {
         return getImageHolder(lastImageViewId);
     }
 
-    protected Map<Integer, ImageHolder> getImageHolders() {
-        return buffer;
+    protected Collection<ImageHolder> getImageHolders() {
+        return buffer.values();
     }
 
     protected void setLastImageViewId(int viewId) {

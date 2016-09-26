@@ -48,4 +48,6 @@ abstract class ImageCapturePage {
     public abstract void onSaveInstanceState(Bundle outState);
 
     public abstract void onRestoreInstanceState(Bundle savedInstanceState);
+
+    public abstract void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults);
 }

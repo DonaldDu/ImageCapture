@@ -1,12 +1,14 @@
 package com.dhy.imagecaputer;
 
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -15,6 +17,7 @@ import android.os.Build;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -24,7 +27,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class ImageCaptureUtil extends ImageCaptureData {
     private int REQUEST_TAKE_PHOTO, REQUEST_PICK_IMAGE;
@@ -101,13 +103,50 @@ public class ImageCaptureUtil extends ImageCaptureData {
 
     protected void onStartCaptureImageError(boolean takePhoto, Exception e) {
         e.printStackTrace();
-        String msg;
         if (e instanceof SecurityException) {
-            msg = takePhoto ? "请开启拍照权限" : "请开启读取文件权限";
-        } else if (e instanceof ActivityNotFoundException) {
-            msg = takePhoto ? "没有找到拍照相关应用" : "没有找到选择图片相关应用";
-        } else msg = takePhoto ? "未知错误，相机拍照失败" : "未知错误，选择图片失败";
-        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+            String[] permission;
+            if (takePhoto) {
+                permission = new String[]{Manifest.permission.CAMERA};
+            } else {
+                permission = new String[]{
+                        Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                };
+            }
+            int requestCode = takePhoto ? REQUEST_TAKE_PHOTO : REQUEST_PICK_IMAGE;
+            ActivityCompat.requestPermissions((Activity) context, permission, requestCode);
+        } else {
+            String msg;
+            if (e instanceof ActivityNotFoundException) {
+                msg = takePhoto ? "没有找到拍照相关应用" : "没有找到选择图片相关应用";
+            } else msg = takePhoto ? "未知错误，相机拍照失败" : "未知错误，选择图片失败";
+            Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Boolean take = isTakePhotoRequestPermissionsResult(requestCode);
+        if (take == null) return;
+        if (grantResults != null && grantResults.length >= 1) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                View view = findViewById(getLastImageViewId());
+                if (take) takePhoto(view);
+                else pickImage(view);
+            }
+        }
+    }
+
+    /**
+     * @return true take photo, fales pick image, null unkown
+     */
+    @Nullable
+    private Boolean isTakePhotoRequestPermissionsResult(int requestCode) {
+        if (requestCode == REQUEST_TAKE_PHOTO) {
+            return true;
+        } else if (requestCode == REQUEST_PICK_IMAGE) {
+            return false;
+        } else return null;
     }
 
     /**
@@ -170,8 +209,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
     //region for upload image
 
     private void prepareUploadFile() throws FileNotFoundException {
-        Map<Integer, ImageHolder> holders = getImageHolders();
-        for (ImageHolder h : holders.values()) {
+        for (ImageHolder h : getImageHolders()) {
             if (h.needPrepared()) {
                 File file = ImageHolder.getJpgImageFile(context);
                 ImageCompressUtil.compressJpegImage(context, h.getRawImage(), file,
@@ -192,8 +230,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
      */
     @Nullable
     private ImageHolder getNextUploadTask() {
-        for (Integer id : getImageHolders().keySet()) {
-            ImageHolder h = getImageHolder(id);
+        for (ImageHolder h : getImageHolders()) {
             if (!h.isUploaded() && h.isReadyToUpload()) {
                 return h;
             }
@@ -230,7 +267,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
 
     public List<ImageHolder> getAllUploadImageResults() {
         List<ImageHolder> list = new ArrayList<>();
-        for (ImageHolder h : getImageHolders().values()) {
+        for (ImageHolder h : getImageHolders()) {
             if (h.isUploaded()) list.add(h);
         }
         return list;
