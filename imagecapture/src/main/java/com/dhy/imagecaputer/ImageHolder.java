@@ -2,9 +2,13 @@ package com.dhy.imagecaputer;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Environment;
+import android.support.annotation.IdRes;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,7 +19,7 @@ public class ImageHolder implements Serializable {
     private String uploadedImageUrl;
     private int viewId;
 
-    public ImageHolder(int viewId) {
+    public ImageHolder(@IdRes int viewId) {
         this.viewId = viewId;
     }
 
@@ -35,8 +39,9 @@ public class ImageHolder implements Serializable {
         return rawImageUri != null;
     }
 
+    @Nullable
     File getTempImageFile(Context context) {
-        if (temp == null) temp = getJpgImageFile(context);
+        if (temp == null) temp = getJpgImageFile(context, viewId);
         return temp;
     }
 
@@ -49,12 +54,23 @@ public class ImageHolder implements Serializable {
         temp = null;
     }
 
-    static File getJpgImageFile(Context context) {
-        File dir = context.getExternalCacheDir();
-        if (dir == null) dir = context.getCacheDir();
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String fileName = context.getClass().getName() + timeStamp + ".jpg";
-        return new File(dir, fileName);
+    @Nullable
+    static File getJpgImageFile(Context context, @IdRes int viewId) {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String imageFileName = "JPEG_" + timeStamp + "_" + Math.abs(viewId);
+            File storageDir = getTempFileDir(context);
+            try {
+                return File.createTempFile(imageFileName, ".jpg", storageDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    static File getTempFileDir(Context context) {
+        return context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
     }
 
     boolean needPrepared() {
@@ -103,6 +119,7 @@ public class ImageHolder implements Serializable {
         return uploadFile;
     }
 
+    @IdRes
     public int getViewId() {
         return viewId;
     }

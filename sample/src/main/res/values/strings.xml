@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Sample</string>
+    <string name="file_provider_authority">com.dhy.imagecapturesample.fileprovider</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.dhy.imagecapturesample;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -46,12 +47,10 @@ public class MainActivity extends AppCompatActivity {
         imageCaptureUtil.onActivityResult(requestCode, resultCode, data);
     }
 
-    public void takePhoto(View view) {
-        imageCaptureUtil.takePhoto(imageView);
-    }
-
-    public void pickImage(View view) {
-        imageCaptureUtil.pickImage(imageView);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        imageCaptureUtil.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     void upload() {

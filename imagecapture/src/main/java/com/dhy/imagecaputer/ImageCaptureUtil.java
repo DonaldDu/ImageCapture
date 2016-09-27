@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,6 +19,8 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -31,8 +34,12 @@ import java.util.List;
 public class ImageCaptureUtil extends ImageCaptureData {
     private int REQUEST_TAKE_PHOTO, REQUEST_PICK_IMAGE;
     private CaptureSetting setting;
+    private static final String[] permissionTake = new String[]{Manifest.permission.CAMERA};
+    private static final String[] permissionPick = new String[]{Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    private final String file_provider_authority;
 
     /**
+     * NOT: you need set 'file_provider_authority' in string file
      * creat with default {@link CaptureSetting} and {@link ImageSetter} of imageView.setImageURI(uri);
      * <p>use {@link #initSetting(CaptureSetting)} to set custom setting</p>
      */
@@ -45,9 +52,13 @@ public class ImageCaptureUtil extends ImageCaptureData {
         });
     }
 
+    /**
+     * NOT: you need set 'file_provider_authority' in string file
+     */
     public <T extends View.OnCreateContextMenuListener> ImageCaptureUtil(T activityOrFragment, @NonNull ImageSetter imageSetter) {
         super(activityOrFragment, imageSetter);
         initSetting(new CaptureSetting());
+        file_provider_authority = context.getString(R.string.file_provider_authority);
     }
 
     public void initSetting(@NonNull CaptureSetting setting) {
@@ -56,17 +67,17 @@ public class ImageCaptureUtil extends ImageCaptureData {
         this.REQUEST_PICK_IMAGE = setting.REQUEST_PICK_IMAGE;
     }
 
-    public void showChooseDialog(final View imageView) {
+    public void showChooseDialog(@NonNull final View imageView) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage("You may override this to show custom dialog");
-        builder.setNegativeButton("PickImage", new DialogInterface.OnClickListener() {
+        builder.setMessage("请选择获取图片方式");
+        builder.setNegativeButton("选择图片", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
                 pickImage(imageView);
             }
         });
-        builder.setPositiveButton("TakePhoto", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("拍照", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
@@ -76,22 +87,43 @@ public class ImageCaptureUtil extends ImageCaptureData {
         builder.show();
     }
 
-    public void takePhoto(View imageView) {
+    public void takePhoto(@NonNull View imageView) {
         setLastImageViewId(imageView.getId());
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        ImageHolder holder = getImageHolder(imageView.getId());
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(holder.getTempImageFile(context)));
-        try {
-            startActivityForResult(intent, REQUEST_TAKE_PHOTO);
-        } catch (Exception e) {
-            onStartCaptureImageError(true, e);
+        File file = getImageHolder(imageView.getId()).getTempImageFile(context);
+        if (file == null) {
+            onCancelTakePhotoForCreateTempFileFailed();
+            return;
+        }
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, getPhotoUri(file));
+        if (hasPermission(permissionTake)) {
+            try {
+                startActivityForResult(intent, REQUEST_TAKE_PHOTO);
+            } catch (Exception e) {
+                onStartCaptureImageError(true, e);
+            }
+        } else {
+            showRequestPermissionsDialog(true);
         }
     }
 
-    public void pickImage(View imageView) {
+    protected void onCancelTakePhotoForCreateTempFileFailed() {
+        Toast.makeText(context, "创建临时文件失败！", Toast.LENGTH_SHORT).show();
+    }
+
+    @Nullable
+    private Uri getPhotoUri(File file) {
+        if (file == null) return null;
+        if (Build.VERSION.SDK_INT >= 24) {
+            return FileProvider.getUriForFile(context, file_provider_authority, file);
+        } else {
+            return Uri.fromFile(file);
+        }
+    }
+
+    public void pickImage(@NonNull View imageView) {
         setLastImageViewId(imageView.getId());
-        @SuppressLint("InlinedApi")
-        Intent intent = new Intent(Build.VERSION.SDK_INT >= 19 ? Intent.ACTION_OPEN_DOCUMENT : Intent.ACTION_GET_CONTENT);
+        Intent intent = new Intent(getPickImageAction());
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
         try {
@@ -101,20 +133,15 @@ public class ImageCaptureUtil extends ImageCaptureData {
         }
     }
 
+    @SuppressLint("InlinedApi")
+    private String getPickImageAction() {
+        return Build.VERSION.SDK_INT >= 19 ? Intent.ACTION_OPEN_DOCUMENT : Intent.ACTION_GET_CONTENT;
+    }
+
     protected void onStartCaptureImageError(boolean takePhoto, Exception e) {
         e.printStackTrace();
         if (e instanceof SecurityException) {
-            String[] permission;
-            if (takePhoto) {
-                permission = new String[]{Manifest.permission.CAMERA};
-            } else {
-                permission = new String[]{
-                        Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                };
-            }
-            int requestCode = takePhoto ? REQUEST_TAKE_PHOTO : REQUEST_PICK_IMAGE;
-            ActivityCompat.requestPermissions((Activity) context, permission, requestCode);
+            showRequestPermissionsDialog(takePhoto);
         } else {
             String msg;
             if (e instanceof ActivityNotFoundException) {
@@ -122,6 +149,52 @@ public class ImageCaptureUtil extends ImageCaptureData {
             } else msg = takePhoto ? "未知错误，相机拍照失败" : "未知错误，选择图片失败";
             Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
         }
+    }
+
+    private boolean hasPermission(String[] permission) {
+        for (String p : permission) {
+            if (ContextCompat.checkSelfPermission(context, p) == PackageManager.PERMISSION_DENIED)
+                return false;
+        }
+        return true;
+    }
+
+    protected void showRequestPermissionsDialog(final boolean takePhoto) {
+        if (shouldShowRequestPermissionRationale(takePhoto)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setMessage("申请【" + (takePhoto ? "拍照" : "选择图片") + "】权限");
+            builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            builder.setPositiveButton("申请", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    requestPermissions(takePhoto);
+                }
+            });
+            builder.show();
+        } else {
+            requestPermissions(takePhoto);
+        }
+    }
+
+    protected void requestPermissions(boolean takePhoto) {
+        String[] permissions = takePhoto ? permissionTake : permissionPick;
+        int requestCode = takePhoto ? REQUEST_TAKE_PHOTO : REQUEST_PICK_IMAGE;
+        ActivityCompat.requestPermissions((Activity) context, permissions, requestCode);
+    }
+
+    protected boolean shouldShowRequestPermissionRationale(boolean takePhoto) {
+        String[] permissions = takePhoto ? permissionTake : permissionPick;
+        for (String permission : permissions) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale((Activity) context, permission))
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -189,7 +262,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
         }
     }
 
-    void checkImageRotate(File photo) {
+    private void checkImageRotate(File photo) {
         try {
             int digree = ImageRotateUtil.getRotateDigree(photo);
             if (digree > 0) {
@@ -211,7 +284,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
     private void prepareUploadFile() throws FileNotFoundException {
         for (ImageHolder h : getImageHolders()) {
             if (h.needPrepared()) {
-                File file = ImageHolder.getJpgImageFile(context);
+                File file = ImageHolder.getJpgImageFile(context, h.getViewId());
                 ImageCompressUtil.compressJpegImage(context, h.getRawImage(), file,
                         (int) setting.maxWidth,
                         (int) setting.maxHeight,
@@ -273,4 +346,22 @@ public class ImageCaptureUtil extends ImageCaptureData {
         return list;
     }
     //endregion
+
+    public static void clearTempFiles(Context context) {
+        try {
+            File dir = ImageHolder.getTempFileDir(context);
+            if (dir != null) clear(dir);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void clear(File file) {
+        if (file.isDirectory()) {
+            for (File f : file.listFiles()) {
+                clear(f);
+            }
+        } else {
+            file.delete();
+        }
+    }
 }
