@@ -58,7 +58,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
     public <T extends View.OnCreateContextMenuListener> ImageCaptureUtil(T activityOrFragment, @NonNull ImageSetter imageSetter) {
         super(activityOrFragment, imageSetter);
         initSetting(new CaptureSetting());
-        file_provider_authority = context.getString(R.string.file_provider_authority);
+        file_provider_authority = context.getPackageName() + ".fileprovider";
     }
 
     public void initSetting(@NonNull CaptureSetting setting) {
@@ -161,14 +161,14 @@ public class ImageCaptureUtil extends ImageCaptureData {
     protected void showRequestPermissionsDialog(final boolean takePhoto) {
         if (shouldShowRequestPermissionRationale(takePhoto)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setMessage("申请【" + (takePhoto ? "拍照" : "选择图片") + "】权限");
+            builder.setMessage("请开启【" + (takePhoto ? "拍照" : "选择图片") + "】权限，以便使用此功能");
             builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();
                 }
             });
-            builder.setPositiveButton("申请", new DialogInterface.OnClickListener() {
+            builder.setPositiveButton("开启", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();
