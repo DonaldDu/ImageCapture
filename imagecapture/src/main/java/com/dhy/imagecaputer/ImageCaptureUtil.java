@@ -161,7 +161,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
     protected void showRequestPermissionsDialog(final boolean takePhoto) {
         if (shouldShowRequestPermissionRationale(takePhoto)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setMessage("请开启【" + (takePhoto ? "拍照" : "选择图片") + "】权限，以便使用此功能");
+            builder.setMessage("请开启【" + (takePhoto ? "拍照" : "文件读写") + "】权限，以便使用此功能");
             builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
