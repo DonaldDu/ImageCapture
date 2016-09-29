@@ -1,16 +1,19 @@
 package com.dhy.imagecapturesample;
 
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.dhy.imagecaputer.ImageCaptureUtil;
 import com.dhy.imagecaputer.ImageHolder;
+import com.dhy.imagecaputer.ImageSetter;
 import com.dhy.imagecaputer.ImageUploader;
 import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.view.SimpleDraweeView;
 
 import java.io.File;
 import java.util.List;
@@ -18,15 +21,27 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     ImageCaptureUtil imageCaptureUtil;
-    ImageView imageView;
+    SimpleDraweeView imageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Fresco.initialize(this);
         setContentView(R.layout.activity_main);
-        imageView = (ImageView) findViewById(R.id.imageView);
-        imageCaptureUtil = new ImageCaptureUtil(this);
+        imageView = (SimpleDraweeView) findViewById(R.id.imageView);
+        imageCaptureUtil = new ImageCaptureUtil(this, new ImageSetter() {
+            @Override
+            public void setImage(ImageView imageView, Uri uri) {
+                imageView.setImageURI(uri);
+                System.out.println("uri " + uri.toString());
+            }
+        });
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                choose(v);
+            }
+        });
     }
 
     @Override
