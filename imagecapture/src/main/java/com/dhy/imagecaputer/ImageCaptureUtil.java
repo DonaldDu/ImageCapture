@@ -113,7 +113,6 @@ public class ImageCaptureUtil extends ImageCaptureData {
 
     @Nullable
     private Uri getPhotoUri(File file) {
-        if (file == null) return null;
         if (Build.VERSION.SDK_INT >= 24) {
             return FileProvider.getUriForFile(context, file_provider_authority, file);
         } else {

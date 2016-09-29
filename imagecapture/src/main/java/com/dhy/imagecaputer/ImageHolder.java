@@ -8,12 +8,12 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class ImageHolder implements Serializable {
+    static String TAG = "TAG";
     private File uploadFile, temp;
     private String rawImageUri;
     private String uploadedImageUrl;
@@ -58,13 +58,9 @@ public class ImageHolder implements Serializable {
     static File getJpgImageFile(Context context, @IdRes int viewId) {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String imageFileName = "JPEG_" + timeStamp + "_" + Math.abs(viewId);
+            String imageFileName = "JPEG_" + timeStamp + "_" + viewId + ".jpg";
             File storageDir = getTempFileDir(context);
-            try {
-                return File.createTempFile(imageFileName, ".jpg", storageDir);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            return new File(storageDir, imageFileName);
         }
         return null;
     }
