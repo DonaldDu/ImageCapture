@@ -23,6 +23,8 @@ abstract class ImageCapturePage {
             return (Activity) activityOrFragment;
         } else if (activityOrFragment instanceof Fragment) {//fragment
             return ((Fragment) activityOrFragment).getActivity();
+        } else if (activityOrFragment instanceof android.support.v4.app.Fragment) {//fragment
+            return ((android.support.v4.app.Fragment) activityOrFragment).getActivity();
         } else {
             throw new IllegalArgumentException("must be activityOrFragment");
         }
@@ -35,8 +37,10 @@ abstract class ImageCapturePage {
     protected void startActivityForResult(Intent intent, int requestCode) throws SecurityException {
         if (activityOrFragment instanceof Activity) {
             ((Activity) activityOrFragment).startActivityForResult(intent, requestCode);
-        } else {//fragment
+        } else if (activityOrFragment instanceof Fragment) {//fragment
             ((Fragment) activityOrFragment).startActivityForResult(intent, requestCode);
+        } else if (activityOrFragment instanceof android.support.v4.app.Fragment) {//fragment
+            ((android.support.v4.app.Fragment) activityOrFragment).startActivityForResult(intent, requestCode);
         }
     }
 

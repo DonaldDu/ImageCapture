@@ -36,7 +36,6 @@ public class ImageCaptureUtil extends ImageCaptureData {
     private CaptureSetting setting;
     private static final String[] permissionTake = new String[]{Manifest.permission.CAMERA};
     private static final String[] permissionPick = new String[]{Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-    private final String file_provider_authority;
 
     /**
      * NOT: you need set 'file_provider_authority' in string file
@@ -58,7 +57,6 @@ public class ImageCaptureUtil extends ImageCaptureData {
     public <T extends View.OnCreateContextMenuListener> ImageCaptureUtil(T activityOrFragment, @NonNull ImageSetter imageSetter) {
         super(activityOrFragment, imageSetter);
         initSetting(new CaptureSetting());
-        file_provider_authority = context.getPackageName() + ".fileprovider";
     }
 
     public void initSetting(@NonNull CaptureSetting setting) {
@@ -114,7 +112,7 @@ public class ImageCaptureUtil extends ImageCaptureData {
     @Nullable
     private Uri getPhotoUri(File file) {
         if (Build.VERSION.SDK_INT >= 24) {
-            return FileProvider.getUriForFile(context, file_provider_authority, file);
+            return FileProvider.getUriForFile(context, context.getPackageName(), file);
         } else {
             return Uri.fromFile(file);
         }
