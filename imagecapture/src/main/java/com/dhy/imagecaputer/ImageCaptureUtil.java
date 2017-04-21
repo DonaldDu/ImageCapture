@@ -6,7 +6,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -343,22 +342,4 @@ public class ImageCaptureUtil extends ImageCaptureData {
         return list;
     }
     //endregion
-
-    public static void clearTempFiles(Context context) {
-        try {
-            File dir = ImageHolder.getTempFileDir(context);
-            if (dir != null) clear(dir);
-        } catch (Exception ignored) {
-        }
-    }
-
-    private static void clear(File file) {
-        if (file.isDirectory()) {
-            for (File f : file.listFiles()) {
-                clear(f);
-            }
-        } else {
-            file.delete();
-        }
-    }
 }
