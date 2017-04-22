@@ -45,6 +45,16 @@ abstract class ImageCaptureData extends ImageCapturePage {
         return status;
     }
 
+    public Map<Integer, ImageHolder> getImages() {
+        return buffer;
+    }
+
+    public void loadExtraImages(Map<Integer, ImageHolder> extra) {
+        if (extra != null) for (Integer viewId : extra.keySet()) {
+            buffer.put(viewId, extra.get(viewId));
+        }
+    }
+
     @NonNull
     protected ImageHolder getLastImageHolder() {
         return getImageHolder(lastImageViewId);
@@ -82,7 +92,7 @@ abstract class ImageCaptureData extends ImageCapturePage {
     }
 
     protected void updateView(ImageView imageView, ImageHolder holder) {
-        if (imageSetter != null && holder.hasImage()) {
+        if (imageView != null && imageSetter != null && holder.hasImage()) {
             if (imageView.getVisibility() != View.VISIBLE) imageView.setVisibility(View.VISIBLE);
             imageSetter.setImage(imageView, holder.getRawImage());
         }
