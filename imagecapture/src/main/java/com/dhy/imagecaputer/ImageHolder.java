@@ -35,7 +35,7 @@ public class ImageHolder implements Serializable {
         return !TextUtils.isEmpty(uploadedImageUrl);
     }
 
-    boolean hasImage() {
+    public boolean hasImage() {
         return rawImageUri != null;
     }
 
