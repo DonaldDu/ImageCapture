@@ -72,6 +72,11 @@ abstract class ImageCaptureData extends ImageCapturePage {
         return lastImageViewId;
     }
 
+    public void reset() {
+        buffer.clear();
+        lastImageViewId = View.NO_ID;
+    }
+
     //region restore data
     public void onSaveInstanceState(Bundle outState) {
         Map<String, Serializable> map = new HashMap<>();
