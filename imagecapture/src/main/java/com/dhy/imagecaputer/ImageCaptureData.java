@@ -1,11 +1,13 @@
 package com.dhy.imagecaputer;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.ImageView;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -73,6 +75,12 @@ abstract class ImageCaptureData extends ImageCapturePage {
     }
 
     public void reset() {
+        for (ImageHolder holder : buffer.values()) {
+            holder.deleteTempImageFile();
+            File file = holder.getUploadFile();
+            if (file != null && file.exists()) file.delete();
+            imageSetter.setImage((ImageView) findViewById(holder.getViewId()), Uri.EMPTY);
+        }
         buffer.clear();
         lastImageViewId = View.NO_ID;
     }
