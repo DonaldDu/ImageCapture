@@ -27,7 +27,7 @@ public class ImageHolder implements Serializable {
         return uploadedImageUrl;
     }
 
-    void setUploadedImageUrl(String uploadedImageUrl) {
+    public void setUploadedImageUrl(String uploadedImageUrl) {
         this.uploadedImageUrl = uploadedImageUrl;
     }
 
