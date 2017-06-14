@@ -20,7 +20,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -85,48 +84,6 @@ public class ImageCaptureUtil extends ImageCaptureData {
         builder.show();
     }
 
-    //    http://www.jianshu.com/p/ba57444a7e69#
-    //    http://www.cnblogs.com/jun-it/articles/2881826.html#commentform
-    public void startPhotoZoom(Uri inputUri, File file) {// TODO: 2017/5/23/023
-        if (inputUri == null) {
-            Log.i("TAG", "The uri is not exist.");
-            return;
-        }
-
-        Intent intent = new Intent("com.android.camera.action.CROP");
-        //sdk>=24
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Uri outPutUri = Uri.fromFile(file);
-            intent.setDataAndType(inputUri, "image/*");
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, outPutUri);
-            intent.putExtra("noFaceDetection", false);//去除默认的人脸识别，否则和剪裁匡重叠
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
-        } else {
-            Uri outPutUri = Uri.fromFile(file);
-            if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                String url = GetImagePath.getPath(context, inputUri);//这个方法是处理4.4以上图片返回的Uri对象不同的处理方法
-                intent.setDataAndType(Uri.fromFile(new File(url)), "image/*");
-            } else {
-                intent.setDataAndType(inputUri, "image/*");
-            }
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, outPutUri);
-        }
-
-        // 设置裁剪
-        intent.putExtra("crop", "true");
-        // aspectX aspectY 是宽高的比例
-        intent.putExtra("aspectX", 1);
-        intent.putExtra("aspectY", 1);
-        // outputX outputY 是裁剪图片宽高
-        intent.putExtra("outputX", 200);
-        intent.putExtra("outputY", 200);
-        intent.putExtra("return-data", false);
-        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());// 图片格式
-        startActivityForResult(intent, REQUEST_TAKE_PHOTO);//这里就将裁剪后的图片的Uri返回了
-    }
-
     public void takePhoto(@NonNull View imageView) {
         setLastImageViewId(imageView.getId());
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -136,16 +93,6 @@ public class ImageCaptureUtil extends ImageCaptureData {
             return;
         }
         intent.putExtra(MediaStore.EXTRA_OUTPUT, getPhotoUri(file));
-        // 设置裁剪
-        intent.putExtra("crop", "true");
-        // aspectX aspectY 是宽高的比例
-        intent.putExtra("aspectX", 1);
-        intent.putExtra("aspectY", 1);
-        // outputX outputY 是裁剪图片宽高
-        intent.putExtra("outputX", 600);
-        intent.putExtra("outputY", 600);
-        intent.putExtra("return-data", false);
-        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());// 图片格式
         if (hasPermission(permissionTake)) {
             try {
                 startActivityForResult(intent, REQUEST_TAKE_PHOTO);
