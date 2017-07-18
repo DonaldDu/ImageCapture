@@ -113,7 +113,12 @@ abstract class ImageCaptureData extends ImageCapturePage {
 
     public void updateView() {
         for (Integer id : buffer.keySet()) {
-            updateView((ImageView) findViewById(id), buffer.get(id));
+            View view = findViewById(id);
+            if (view instanceof ImageView) {
+                updateView((ImageView) view, buffer.get(id));
+            } else {
+                buffer.remove(id);
+            }
         }
     }
     //endregion
