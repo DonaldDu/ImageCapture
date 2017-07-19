@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 abstract class ImageCaptureData extends ImageCapturePage {
@@ -112,12 +113,15 @@ abstract class ImageCaptureData extends ImageCapturePage {
     }
 
     public void updateView() {
-        for (Integer id : buffer.keySet()) {
+        final Iterator<Integer> iterator = buffer.keySet().iterator();
+        while (iterator.hasNext()) {
+            int id = iterator.next();
             View view = findViewById(id);
             if (view instanceof ImageView) {
                 updateView((ImageView) view, buffer.get(id));
             } else {
-                buffer.remove(id);
+                buffer.get(id).reset();
+                iterator.remove();
             }
         }
     }
