@@ -81,7 +81,8 @@ public class ImageHolder implements Serializable {
         if (file != null && file.exists()) file.delete();
     }
 
-    Uri getRawImage() {
+    @Nullable
+    public Uri getRawImage() {
         if (rawImageUri != null) {
             return Uri.parse(rawImageUri);
         } else if (uploadedImageUrl != null) {
